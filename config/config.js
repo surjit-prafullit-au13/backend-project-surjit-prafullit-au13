@@ -1,4 +1,4 @@
 module.exports = {
     'secret': 'movie',
-    'port' : 27017
+    'port' : process.env.PORT || '27017'
 }
