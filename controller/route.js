@@ -17,16 +17,23 @@ router.use(cookieParser())
 
 
 router.post('/register', (req,res)=>{
-    console.log("Hello world...")
-    bcrypt.hash(req.body.password, 10,function(err, hash){    //hashing the password using bcrypt
-        User.create({
-            name: req.body.name,
-            email: req.body.email,
-            password: hash,
-            is_admin: req.body.is_admin   
-        })
+    User.findOne({email: req.body.email},(err,user)=>{
+        if(user){
+            res.send("User already registered!")
+        }
+        else{
+            bcrypt.hash(req.body.password, 10,function(err, hash){    //hashing the password using bcrypt
+                User.create({
+                    name: req.body.name,
+                    email: req.body.email,
+                    password: hash,
+                    is_admin: req.body.is_admin   
+                })
+            })
+            res.send("user registered successfully")
+        }
 })
-    res.send("user registered successfully")
+    
 })
 
 
@@ -58,15 +65,17 @@ router.post('/movie',(req,res)=>{
             res.send("Login/Register to get access!")
         }
         else{
-            Movie.findOne({name: req.body.movie_name},{_id:0,numVotes:0},(err,movie)=>{
+            Movie.findOne({name: req.body.movie_name},{_id:0,numVotes:0,__v:0},(err,movie)=>{
                 if(movie == null){
                     res.send("Movie not found!")
                 }
-                Movie.find({"genre":movie.genre,"name":{$ne:movie.name}},{_id:0,numVotes:0}).sort({"rating":-1}).exec(function(err,model){
-                    res.json({"your movie":movie,
-                                "Movie Recomendation":model    //giving movie recomendation
-                            })
-                })                        
+                else{
+                    Movie.find({"genre":movie.genre,"name":{$ne:movie.name}},{_id:0,numVotes:0,__v:0}).sort({"rating":-1}).exec(function(err,model){
+                        res.json({"your movie":movie,
+                                    "Movie Recomendation":model    //giving movie recomendation
+                                })
+                    })
+                }                        
             })
         }
     })
@@ -93,7 +102,7 @@ router.post('/rating', (req,res)=>{
                             throw err
                         }
                     })
-                    Movie.findOne({name: req.body.movie_name},{_id:0},(err,movie)=>{
+                    Movie.findOne({name: req.body.movie_name},{_id:0,__v:0},(err,movie)=>{
                         if(err){
                             throw err
                         }
